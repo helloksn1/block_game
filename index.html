@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html>
+    <!--
+        Written by RiKiBom
+        Date: 2020.8.x
+    -->
+    <head>
+        <title>Block game</title>
+        <style>
+            * {
+                box-sizing: border-box;
+            }
+            body {
+                background-color: black;
+            }
+            #score {
+                font-size: 50px;
+                font-weight: bold;
+                font-style: italic;
+                color: red;
+                width: 300px;
+                height:100px;
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                transform: translate(-350px, -250px);
+                font-family: "Ink Free";
+            }
+            #addedscore {
+                font-size: 30px;
+                font-weight: bold;
+                color: white;
+                width: 100px;
+                height: 40px;
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                transform: translate(-330px, -250px);
+                opacity: 0;
+            }
+            #pad {
+                display: grid;
+                justify-content: center;
+                grid-gap: 2px;
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%);
+                overflow: hidden;
+            }
+            .block {
+                width: 30px;
+                height: 30px;
+                position: relative;
+                display: inline-block;
+                margin: 0px;
+                padding: 0px;
+                border-radius: 20%;
+            }
+            .innerblock {
+                width: 10px;
+                height: 10px;
+                position: absolute;
+                border-radius: 50%;
+                background-color: white;
+                right: 3px;
+                bottom: 3px;
+            }
+            #levelpad {
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                transform: translate(-300px, 100px);
+            }
+            #targetscorepad {
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                transform: translate(-350px, 0px);
+                color: white;
+                font-size: 50px;
+                font-weight: bold;
+                font-family: "Ink Free";
+            }
+            #scorebarout {
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                transform: translate(200px, -240px);
+                width: 30px;
+                height: 480px;
+                outline: solid 2px white;
+                outline-offset: 3px;
+            }
+            #targetbarout {
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                transform: translate(250px, -240px);
+                width: 30px;
+                height: 480px;
+                outline: solid 2px white;
+                outline-offset: 3px;
+            }
+            #scorebar {
+                position: absolute;
+                bottom: 0%;
+                width: 100%;
+                height: 0%;
+                background-color: dodgerblue;
+                transition: 1s;
+                overflow: hidden;
+            }
+            #targetbar {
+                position: absolute;
+                bottom: 0%;
+                width: 100%;
+                height: 100%;
+                background-color: white;
+                transition: 1s;
+            }
+            #failedout {
+                position: absolute;
+                width: 760px;   
+                height: 540px;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%);
+                overflow: hidden;
+                visibility: hidden;
+            }
+            #failed {
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                background-color:rgba(163, 73, 164, 0.9);
+                border-radius: 30px;
+                transform: translate(0%, -100%);
+                transition: transform 1s ease;
+            }
+            #failedtext {
+                text-align: center;
+                font-size: 100px;
+                font-family: "Segoe Print";
+            }
+            @keyframes score {
+                from {
+                    font-size: 80px;
+                }
+                to {
+                    font-size: 50px;
+                }
+            }
+            @keyframes addedscore {
+                from {
+                    transform: translate(-330px, -150px);
+                    opacity: 1;
+                }
+                to {
+                    transform: translate(-330px, -250px);
+                    opacity: 0;
+                }
+            }
+            @keyframes star_down_right {
+                from { opacity: 1; }
+                to { opacity: 0; transform: translate(50px, 50px); }
+            }
+            @keyframes star_down_left {
+                from { opacity: 1; }
+                to { opacity: 0; transform: translate(-50px, 50px); }
+            }
+            @keyframes star_up_right {
+                from { opacity: 1; }
+                to { opacity: 0; transform: translate(50px, -50px); }
+            }
+            @keyframes star_up_left {
+                from { opacity: 1; }
+                to { opacity: 0; transform: translate(-50px, -50px); }
+            }
+            @keyframes star_up {
+                from { opacity: 1; }
+                to { opacity: 0; transform: translate(-20px, -40px); }
+            }
+            @keyframes star_down {
+                from { opacity: 1; }
+                to { opacity: 0; transform: translate(20px, 40px); }
+            }
+            @keyframes star_left {
+                from { opacity: 1; }
+                to { opacity: 0; transform: translate(-40px, -20px); }
+            }
+            @keyframes star_right {
+                from { opacity: 1; }
+                to { opacity: 0; transform: translate(40px, 20px); }
+            }
+            #frame {
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                width: 330px;
+                height: 490px;
+                transform: translate(-50%, -50%);
+                border: solid 2px white;
+                border-radius: 10px;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="frame"></div>
+        <div id="score">0</div>
+        <div id="addedscore"></div>
+        <div id="pad"></div>
+        <div id="levelpad"></div>
+        <div id="targetscorepad"></div>
+        <div id="nextlevel"></div>
+        <div id="scorebarout">
+            <div id="scorebar"></div>
+        </div>
+        <div id="targetbarout">
+            <div id="targetbar"></div>
+        </div>
+        <div id="failedout">
+            <div id="failed">
+                <p id="failedtext">FAILED!</p>
+            </div>
+        </div>
+    </body>
+    <script>
+        let column_n = 10;
+        let row_n = 15;
+        let blocks_data;
+        let blocks_element;
+        let blocks_state;
+        let STATE_NORMAL = 0;
+        let STATE_SELECTED = 1;
+        let STATE_REMOVING = 2;
+        let STATE_DOWNING = 3;
+        let STATE_RIGHTING = 4;
+        let STATE_BIGGING = 5;
+        let pad_element = document.getElementById("pad");
+        let bk_color_names = ["tomato", "orange", "violet", "dodgerblue", "slateblue", "transparent"];
+        let bk_color_n = 5;
+        let move_step_time = 100;
+        let is_moving = false;
+        let move_right_delay = 5;
+        let score = 0;
+        let level = 1;
+        let scorePad = document.getElementById("score");
+        let addedScorePad = document.getElementById("addedscore");
+        let body_element = document.getElementsByTagName("body")[0];
+        let _selected_cnt = 0;
+        let led_num_hor =   '<svg width="50" height="11">' +
+                                '<polygon points="0,5 5,10 44,10 49,5 44,0, 5,0" style="fill:color;stroke:color"/>' +
+                            '</svg>';
+        let led_num_ver =   '<svg width="11" height="50">' +
+                                '<polygon points="5,0 10,5 10,44 5,49 0,44 0,5" style="fill:color;stroke:color"/>' +
+                            '</svg>';
+        let level_pad = document.getElementById("levelpad");
+        let level_leds;
+        let target_score;
+        let target_score_pad = document.getElementById("targetscorepad");
+        let score_bar = document.getElementById("scorebar");
+        let target_bar = document.getElementById("targetbar");
+        let failed = document.getElementById("failed");
+    </script>
+    <script>
+        function getTargetScoreFromLevel(l) {
+            return l * 1000 + (l - 1) * (l - 2) / 2 * 500;
+        }
+
+        function getConnectedBlock(r, c, sel=null) {
+            if (sel == null) {
+                sel = new2dArray(row_n, column_n);
+                for (let i = 0; i < row_n; i++)
+                    for (let j = 0; j < column_n; j++)
+                        sel[i][j] = false;
+            }
+
+            let res = [{"r": r, "c": c}];
+            sel[r][c] = true;
+            let x_off = [1, -1, 0, 0];
+            let y_off = [0, 0, 1, -1];
+            for (let i = 0; i < 4; i++) {
+                let cur_r = r + x_off[i];
+                let cur_c = c + y_off[i];
+                if (cur_r < 0 || cur_c < 0 || cur_r >= row_n || cur_c >= column_n)
+                    continue;
+                if (blocks_data[cur_r][cur_c] != blocks_data[r][c])
+                    continue;
+                if (sel[cur_r][cur_c] == true)
+                    continue;
+                let sub_res = getConnectedBlock(cur_r, cur_c, sel);
+                for (let i = 0; i < sub_res.length; i++) {
+                    res.push(sub_res[i]);
+                }
+            }
+            return res;
+        }
+
+        function new2dArray(r, c) {
+            let arr = new Array(r);
+            for (let i = 0; i < r; i++) {
+                arr[i] = new Array(c);
+            }
+            return arr;
+        }
+
+        function noRemovableBlock() {
+            let sel = new2dArray(row_n, column_n);
+            let i, j;
+            for (i = 0; i < row_n; i++) {
+                for (j = 0; j < column_n; j++) {
+                    sel[i][j] = true;
+                }
+            }
+            for (i = 0; i < row_n; i++) {
+                for (j = 0; j < column_n; j++) {
+                    if (blocks_data[i][j] == bk_color_n)
+                        continue;
+                    if (sel[i][j]) {
+                        let blocks = getConnectedBlock(i, j);
+                        if (blocks.length > 1)
+                            break;
+                        for (let k = 0; k < blocks.length; k++) {
+                            let p = blocks[k];
+                            sel[p.r][p.c] = false;
+                        }
+                    }
+                }
+                if (j != column_n) {
+                    break;
+                }
+            }
+            if (i != row_n) {
+                return false;
+            }
+            return true;
+        }
+    </script>
+    <script>
+        function onLeftClickBlock() {
+            if (is_moving) {
+                return;
+            }
+            let id_str = this.getAttribute("id");
+            let rc_str = id_str.split(" ");
+            let r = parseInt(rc_str[0]);
+            let c = parseInt(rc_str[1]);
+
+            switch (blocks_state[r][c]) {
+                case STATE_NORMAL:
+                    unselectAction();
+                    selectAction(r, c);
+                    break;
+                case STATE_SELECTED:
+                    changeScore(_selected_cnt, blocks_data[r][c]);
+                    updateBarState(bk_color_names[blocks_data[r][c]]);
+                    removeAction();
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        function onRightClickBlock() {
+            unselectAction();
+            return false;
+        }
+    </script>
+    <script>
+        function showOneLed(x, y, ver_hor, parent) {
+            let led = document.createElement("div");
+            led.style.transition = "1s";
+            if (ver_hor) {
+                led.innerHTML = led_num_ver.replace("color", "red");
+            }
+            else {
+                led.innerHTML = led_num_hor.replace("color", "red");
+            }
+            led.style.position = "absolute";
+            led.style.left = x + "px";
+            led.style.top = y + "px";
+            parent.appendChild(led);
+            return led;
+        }
+
+        function showLedNumber(x, y, parent) {
+            /*
+               0
+             -----
+            |1    |2
+            |  3  |
+             -----
+            |4    |5
+            |  6  |
+             -----
+            */
+            let leds = new Array(7);
+            leds[0] = showOneLed(x + 7 , y + 0  , false, parent);
+            leds[1] = showOneLed(x + 0 , y + 11 , true , parent);
+            leds[2] = showOneLed(x + 53, y + 11 , true , parent);
+            leds[3] = showOneLed(x + 7 , y + 53 , false, parent);
+            leds[4] = showOneLed(x + 0 , y + 64 , true , parent);
+            leds[5] = showOneLed(x + 53, y + 64 , true , parent);
+            leds[6] = showOneLed(x + 7 , y + 106, false, parent);
+            return leds;
+        }
+
+        function showNumberOnLed(number, leds) {
+            let on_off = [
+                [1, 1, 1, 0, 1, 1, 1],
+                [0, 0, 1, 0, 0, 1, 0],
+                [1, 0, 1, 1, 1, 0, 1],
+                [1, 0, 1, 1, 0, 1, 1],
+                [0, 1, 1, 1, 0, 1, 0],
+                [1, 1, 0, 1, 0, 1, 1],
+                [1, 1, 0, 1, 1, 1, 1],
+                [1, 0, 1, 0, 0, 1, 0],
+                [1, 1, 1, 1, 1, 1, 1],
+                [1, 1, 1, 1, 0, 1, 1]
+            ];
+            let oned_led = on_off[number];
+            for (let i = 0; i < 7; i++) {
+                if (oned_led[i]) {
+                    leds[i].style.opacity = "1";
+                }
+                else {
+                    leds[i].style.opacity = "0";
+                }
+            }
+        }
+
+        function createBlockElement(r_n, c_n, color) {
+            let block = document.createElement("div");
+            block.setAttribute("id", r_n + " " + c_n);
+            block.className = "block " + color;
+            block.onclick = onLeftClickBlock;
+            block.oncontextmenu = onRightClickBlock;
+            block.innerHTML = "<div class=\"innerblock\"></div>";
+            return block;
+        }
+
+        function changeScore(cnt, col) {
+            let addedScore = 5 * cnt * cnt;
+
+            score += addedScore;
+            scorePad.innerHTML = "" + score;
+            scorePad.style.color = bk_color_names[col];
+            scorePad.style.animationName = "score";
+            scorePad.style.animationDuration = ".5s";
+            setTimeout(function() {
+                let col = scorePad.style.color;
+                scorePad.style = {};
+                scorePad.style.color = col;
+            }, 500);
+
+            addedScorePad.innerHTML = "+" + addedScore;
+            addedScorePad.style.animationName = "addedscore";
+            addedScorePad.style.animationDuration = "1s";
+            setTimeout(function() {
+                addedScorePad.style = {};
+            }, 1000);
+        }
+
+        function selectAction(r, c) {
+            let connected_blocks = getConnectedBlock(r, c);
+            if (connected_blocks.length < 2)
+                return;
+            _selected_cnt = connected_blocks.length;
+            for (let i = 0; i < connected_blocks.length; i++) {
+                let p = connected_blocks[i];
+                blocks_state[p.r][p.c] = STATE_SELECTED;
+                blocks_element[p.r][p.c].style.transform = "scale(.8, .8)";
+                blocks_element[p.r][p.c].style.transition = "transform " + move_step_time / 1000 + "s linear";
+            }
+        }
+
+        function unselectAction() {
+            for (let i = 0; i < row_n; i++) {
+                for (let j = 0; j < column_n; j++) {
+                    if (blocks_state[i][j] != STATE_SELECTED)
+                        continue;
+                    blocks_state[i][j] = STATE_NORMAL;
+                    blocks_element[i][j].style.transform = "scale(1, 1)";
+                    blocks_element[i][j].style.transition = "transform " + move_step_time / 1000 + "s linear";
+                }
+            }
+        }
+        
+        function staticRedraw() {
+            for (let i = 0; i < row_n; i++) {
+                for (let j = 0; j < column_n; j++) {
+                    blocks_element[i][j].style = {}
+                    blocks_element[i][j].style.backgroundColor = bk_color_names[blocks_data[i][j]];
+                    if (blocks_data[i][j] == bk_color_n) {
+                        blocks_element[i][j].style.visibility = "hidden";
+                    }
+                }
+            }
+        }
+
+        function removeAction() {
+            is_moving = true;
+            for (let i = 0; i < row_n; i++) {
+                for (let j = 0; j < column_n; j++) {
+                    if (blocks_state[i][j] != STATE_SELECTED)
+                        continue;
+                    blocks_state[i][j] = STATE_REMOVING;
+                    blocks_element[i][j].style.transform = "scale(0, 0)";
+                    blocks_element[i][j].style.transition = "transform " + move_step_time / 1000 + "s linear";
+                    blocks_data[i][j] = bk_color_n;
+                }
+            }
+            setTimeout(function() {
+                staticRedraw();
+                let down_time = moveDownAction() * move_step_time;
+                setTimeout(function() {
+                    staticRedraw();
+                    setTimeout(function() {
+                        let right_time = moveRightAction();
+                        setTimeout(function() {
+                            staticRedraw();
+                            if (noRemovableBlock()) {
+                                let remove_delay = lastAutoRemove();
+                                setTimeout(function() {
+                                    is_moving = false;
+                                    level++;
+                                    if (score < target_score) {
+                                        showFailed();
+                                    }
+                                    else {
+                                        initAnimation();
+                                    }
+                                }, remove_delay);
+                            }
+                            else {
+                                is_moving = false;
+                            }
+                        }, right_time);
+                    }, move_step_time);
+                    
+                }, down_time);
+            }, move_step_time);
+        }
+
+        function makeRemoveStar(r, c, delay_time) {
+            let pos = blocks_element[r][c].getBoundingClientRect();
+            let x = parseInt(pos.x), y = parseInt(pos.y);
+            let animation_names = ["star_up_right", "star_up_left", "star_down_right", "star_down_left",
+                "star_up", "star_down", "star_left", "star_right"];
+
+            for (let i = 0; i < 4; i++) {
+                let star = document.createElement("div");
+            
+                star.style.position = "absolute";
+                star.style.left = x + 5 + "px";
+                star.style.top = y + 5 + "px";
+                star.style.opacity = "0";
+                star.style.animationName = animation_names[i + ((r + c) % 2 == 0 ? 4 : 0)];
+                star.style.animationDuration = "1s";
+                star.style.animationDelay = (delay_time + 100 * i) / 1000 + "s";
+
+                let svg_html = '<svg width="22" height="22">' +
+                                    '<polygon points="10,1 4,20 19,8 1,8 16,20"style="fill:color;stroke:color"/>' +
+                                '</svg>';
+                svg_html = svg_html.replace("color", bk_color_names[blocks_data[r][c]]);
+                star.innerHTML = svg_html;
+
+                body_element.appendChild(star);
+
+                blocks_element[r][c].style.visibility = "hidden";
+                blocks_element[r][c].style.transitionDelay = delay_time / 1000 + "s";
+
+                setTimeout(function() {
+                    body_element.removeChild(star);
+                }, 1000 + delay_time + 100 * i);
+            }
+        }
+        
+        function lastAutoRemove() {
+            let delay_time = 0;
+            for (let i = 0; i < row_n; i++) {
+                for (let j = 0; j < column_n;j ++) {
+                    if (blocks_data[i][j] == bk_color_n) {
+                        continue;
+                    }
+                    makeRemoveStar(i, j, delay_time);
+                    delay_time += 200;
+                }
+            }
+            return delay_time + 1000 + 300;
+        }
+
+        function initData() {
+            let cols = "";
+            for (let i = 0; i < column_n; i++) {
+                cols += "auto ";
+            }
+            pad_element.style.gridTemplateColumns = cols;
+
+            bk_color_names[bk_color_n] = "transparent";
+
+            blocks_data = new2dArray(row_n, column_n);
+            blocks_element = new2dArray(row_n, column_n);
+            blocks_state = new2dArray(row_n, column_n);
+            for (let i = 0; i < row_n; i++) {
+                for (let j = 0; j < column_n; j++) {
+                    blocks_data[i][j] = bk_color_n;
+
+                    let block_ij = createBlockElement(i, j, bk_color_names[blocks_data[i][j]]);
+                    block_ij.className = "block";
+                    pad_element.appendChild(block_ij);
+                    blocks_element[i][j] = block_ij;
+
+                    blocks_state[i][j] = STATE_NORMAL;
+                }
+            }
+
+            level_leds = showLedNumber(0, 0, level_pad);
+        }
+
+        function fillRandomColor(is_test=false) {
+            if (is_test) {
+                for (let i = 14; i < row_n; i++) {
+                    for (let j = 0; j < column_n; j++) {
+                        blocks_data[i][j] = (i + j) % 2;
+                    }
+                }
+            }
+            else {
+                for (let i = 5; i < row_n; i++) {
+                    for (let j = 0; j < column_n; j++) {
+                        blocks_data[i][j] = Math.floor(Math.random() * bk_color_n);
+                        // blocks_data[i][j] = (i + j) % 2;
+                    }
+                }
+            }
+        }
+
+        function moveDownAction() {
+            // Animation
+            let max_len = 0; // Animation time: maximum move distance
+            for (let i = 0; i < row_n; i++) {
+                for (let j = 0;j < column_n; j++) {
+                    let len = 0;
+                    for (let k = i + 1; k < row_n; k++) {
+                        if (blocks_state[k][j] == STATE_REMOVING)
+                            len++;
+                    }
+                    if (len == 0)
+                        continue;
+                    if (blocks_state[i][j] == STATE_REMOVING)
+                        continue;
+                    if (max_len < len)
+                        max_len = len;
+                    blocks_element[i][j].style.transition = "transform " + move_step_time / 1000 * len + "s linear";
+                    blocks_element[i][j].style.transform = "translate(0px, " + 32 * len + "px)";
+                }
+            }
+            // Update state.
+            for (let i = 0; i < row_n; i++) {
+                for (let j = 0; j < column_n; j++) {
+                    if (blocks_state[i][j] == STATE_REMOVING) {
+                        blocks_data[i][j] = -1;
+                        blocks_state[i][j] = STATE_DOWNING;
+                    }
+                }
+            }
+            for (let i = 0; i < row_n; i++) {
+                for (let j = 0; j < column_n; j++) {
+                    blocks_state[i][j] = STATE_NORMAL;
+                    if (blocks_data[i][j] == -1) {
+                        for (let k = i - 1; k >= 0; k--) {
+                            blocks_data[k+1][j] = blocks_data[k][j];
+                        }
+                        blocks_data[0][j] = bk_color_n;
+                    }
+                }
+            }
+
+            return max_len;
+        }
+
+        function moveRightAction() {
+            // remove_cols[i]: whether is fully removed columns
+            let remove_cols = new Array(column_n);
+            for (let i = 0; i < column_n; i++) {
+                remove_cols[i] = true;
+                for (let j = 0; j < row_n; j++) {
+                    if (blocks_data[j][i] != bk_color_n) {
+                        remove_cols[i] = false;
+                        break;
+                    }
+                }
+            }
+            // Update state.
+            for (let i = 1; i < column_n; i++) {
+                if (!remove_cols[i])
+                    continue;
+                for (let j = i - 1; j >= 0; j--) {
+                    for (let k = 0; k < row_n; k++) {
+                        blocks_data[k][j+1] = blocks_data[k][j];
+                    }
+                }
+                for (let j = 0; j < row_n; j++) {
+                    blocks_data[j][0] = bk_color_n;
+                }
+            }
+            // Animation
+            let max_len = 0;
+            for (let i = 0; i < column_n; i++) {
+                if (remove_cols[i])
+                    continue;
+                let mov_len = 0;
+                for (let j = i + 1; j < column_n; j++) {
+                    if (remove_cols[j])
+                        mov_len++;
+                }
+                if (mov_len) {
+                    for (let j = 0; j < row_n; j++) {
+                        let move_time = move_step_time * mov_len + (row_n - 1 - j) * move_step_time / move_right_delay;
+                        if (max_len < move_time)
+                            max_len = move_time;
+                        blocks_element[j][i].style.transform = "translate(" + 32 * mov_len + "px, 0px)";
+                        blocks_element[j][i].style.transition = "transform " + move_time / 1000 + "s linear";
+                    }
+                }
+                else
+                    break;
+            }
+            // Set as STATE_RIGHTING.
+            // No need.
+            for (let i = 0; i < row_n; i++) {
+                for (let j = 0; j < column_n; j++) {
+                    if (blocks_state[i][j] == STATE_DOWNING) {
+                        blocks_state[i][j] = STATE_RIGHTING;
+                    }
+                }
+            }
+            for (let i = 0; i < row_n; i++) {
+                for (let j = 0; j < column_n; j++) {
+                    blocks_state[i][j] = STATE_NORMAL;
+                }
+            }
+            return max_len;
+        }
+        
+        function startFalling() {
+            let i, j;
+            let block_delay = 20;
+            is_moving = true;
+            // First position
+            for (i = 0; i < row_n; i++) {
+                for (j = 0;j < column_n; j++) {
+                    blocks_element[i][j].style.transform = "translate(0px, -" + (32 * i + 35) + "px)";
+                }
+            }
+            // Animate
+            setTimeout(function() {
+                let full_delay_time = 0;
+                for (i = 0; i < row_n; i++) {
+                    if (blocks_data[i][0] == bk_color_n) {
+                        continue;
+                    }
+                    for (j = 0; j < column_n; j++) {
+                        let delay_time = (row_n - i - 1) * column_n * block_delay;
+                        if (i % 2 == 0) {
+                            delay_time += j * block_delay;
+                        }
+                        else {
+                            delay_time += (column_n - 1 - j) * block_delay;
+                        }
+                        blocks_element[i][j].style.transform = "translate(0px, 0px)";
+                        let block_delay_time = 32 * i + delay_time;
+                        if (block_delay_time > full_delay_time)
+                            full_delay_time = block_delay_time;
+                        blocks_element[i][j].style.transition = "transform " + 32 * i / 1000 + "s linear " + delay_time / 1000 + "s";
+                    }
+                }
+                setTimeout(function() {
+                    is_moving = false;
+                }, full_delay_time);
+            }, 300);
+        }
+
+        function updateBarState(score_color) {
+            let max_score = score;
+            if (max_score < target_score) {
+                max_score = target_score;
+            }
+            let score_percent = parseInt(score * 100 / max_score);
+            let target_percent = parseInt(target_score * 100 / max_score);
+            score_bar.style.height = score_percent + "%";
+            target_bar.style.height = target_percent + "%";
+            score_bar.style.backgroundColor = score_color;
+        }
+
+        function initAnimation() {
+            fillRandomColor(false);
+            staticRedraw();
+            showNumberOnLed(level, level_leds);
+            target_score = getTargetScoreFromLevel(level);
+            target_score_pad.innerHTML = "" + target_score;
+            startFalling();
+            updateBarState();
+        }
+
+        let bubble_block_n = 3;
+        let bubble_block_sz = 3;
+        let bubble_n = bubble_block_n * bubble_block_sz;
+        let bubbles = new Array(bubble_n);
+        function makeBubbles() {
+            for (let i = 0; i < bubble_n; i++) {
+                let cur_bubble = document.createElement("div");
+                cur_bubble.style.position = "absolute";
+                cur_bubble.style.width = (6 + i % 3 * 2) + "px";
+                cur_bubble.style.height = (6 + i % 3 * 2) + "px";
+                cur_bubble.style.borderRadius = "50%";
+                cur_bubble.style.backgroundColor = "white";
+                bubbles[i] = cur_bubble;
+                score_bar.appendChild(cur_bubble);
+            }
+            return bubbles;
+        }
+
+        let _bubble_time = 0;
+        function bubbleAnimation() {
+            let time_len = 480;
+            for (let i = 0; i < bubble_n; i++) {
+                let group = Math.floor((i + 0.5) / bubble_block_sz);
+                let sub = i % 3;
+                let bubble_pos = (_bubble_time + sub * 15 + group * 100) % 480;
+                bubbles[i].style.bottom = bubble_pos + "px";
+                bubbles[i].style.left = Math.sin(bubble_pos / 100 * Math.PI) * 15 + 10 + "px";
+            }
+            _bubble_time = (_bubble_time + 2) % 480;
+            setTimeout(bubbleAnimation, 20);
+        }
+
+        initData();
+        makeBubbles();
+        bubbleAnimation();
+        initAnimation();
+
+        function showFailed() {
+            failed.parentNode.style.visibility = "visible";
+            failed.style.transform = "translate(0%, 0%)";
+        }
+    </script>
+</html>
